@@ -8,29 +8,30 @@ import {
     Post,
     UploadedFile,
     UseInterceptors
-} from '@nestjs/common';
-import {Model} from "mongoose";
-import {Artist, ArtistDocument} from "../schemas/artist.schema";
-import {InjectModel} from "@nestjs/mongoose";
-import {CreateArtistDto} from "./create-artist.dto";
-import {FileInterceptor} from "@nestjs/platform-express";
+} from "@nestjs/common";
+import { Model } from "mongoose";
+import { Artist, ArtistDocument } from "../schemas/artist.schema";
+import { InjectModel } from "@nestjs/mongoose";
+import { CreateArtistDto } from "./create-artist.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller('artists')
 export class ArtistsController {
     constructor(
-        @InjectModel(Artist.name)
-        private artistModel: Model<ArtistDocument>,
-    ) {}
+      @InjectModel(Artist.name)
+      private artistModel: Model<ArtistDocument>,
+    ) {
+    }
 
     @Get()
-    getAll(){
+    getAll() {
         return this.artistModel.find();
     }
 
     @Get(':id')
     async getOne(@Param('id') id: string) {
         const artist = this.artistModel.findById(id);
-        if(!artist) {
+        if (!artist) {
             throw new NotFoundException('No such artist');
         }
 
@@ -39,20 +40,20 @@ export class ArtistsController {
 
     @Post()
     @UseInterceptors(
-        FileInterceptor('image', {dest: './public/uploads/artists'})
+      FileInterceptor('image', { dest: './public/uploads/artists' })
     )
     async create(
-        @UploadedFile() file: Express.Multer.File,
-        @Body() artistData: CreateArtistDto
-    ){
-     const artist = new this.artistModel({
-         name: artistData.name,
-         isPublished: artistData.isPublished,
-         info: artistData.info,
-         image: file ? '/uploads/artists/' + file.filename : null,
-     });
+      @UploadedFile() file: Express.Multer.File,
+      @Body() artistData: CreateArtistDto
+    ) {
+        const artist = new this.artistModel({
+            name: artistData.name,
+            isPublished: artistData.isPublished,
+            info: artistData.info,
+            image: file ? '/uploads/artists/' + file.filename : null,
+        });
 
-     return artist.save();
+        return artist.save();
     }
 
     @Delete(':id')
@@ -64,3 +65,4 @@ export class ArtistsController {
         return deletedArtist;
     }
 }
+
