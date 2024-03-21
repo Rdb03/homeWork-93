@@ -55,7 +55,7 @@ export class AlbumsController {
             isPublished: albumData.isPublished,
             artist: albumData.artist,
             date: albumData.date,
-            image: file ? '/uploads/artists/' + file.filename : null,
+            image: file ? '/uploads/albums/' + file.filename : null,
         });
 
         return album.save();
@@ -63,10 +63,10 @@ export class AlbumsController {
 
     @Delete(':id')
     async delete(@Param('id') id: string) {
-        const deletedArtist = await this.albumModel.findByIdAndDelete(id);
-        if (!deletedArtist) {
-            throw new NotFoundException('No such artist');
+        const deletedAlbum = await this.albumModel.findByIdAndDelete(id);
+        if (!deletedAlbum) {
+            throw new NotFoundException('No such album');
         }
-        return deletedArtist;
+        return deletedAlbum;
     }
 }
