@@ -15,6 +15,8 @@ import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { CreateAlbumDto } from "./create-album.dto";
+import { diskStorage } from "multer";
+import { extname } from 'path';
 
 @Controller('albums')
 export class AlbumsController {
@@ -34,17 +36,26 @@ export class AlbumsController {
 
     @Get(':id')
     async getOne(@Param('id') id: string) {
-        const artist = this.albumModel.findById(id);
-        if(!artist) {
-            throw new NotFoundException('No such artist');
+        const album = await this.albumModel.findById(id);
+        if(!album) {
+            throw new NotFoundException('No such album');
         }
 
-        return artist;
+        return album;
     }
 
     @Post()
     @UseInterceptors(
-      FileInterceptor('image', {dest: './public/uploads/albums'})
+      FileInterceptor('image', {
+          storage: diskStorage({
+              destination: './public/uploads/albums',
+              filename: (req, file, cb) => {
+                  const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                  const extension = extname(file.originalname);
+                  cb(null, `${uniqueSuffix}${extension}`);
+              },
+          }),
+      })
     )
     async create(
       @UploadedFile() file: Express.Multer.File,
