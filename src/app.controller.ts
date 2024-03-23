@@ -11,7 +11,7 @@ export class AppController {
   }
 
   @Get('/bye')
-  getBye(){
-    return this.appService.goodBye()
+  getBye() {
+    return this.appService.goodBye();
   }
 }

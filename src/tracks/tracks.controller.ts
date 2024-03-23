@@ -1,8 +1,18 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Query } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Track, TrackDocument } from "../schemas/track.schema";
-import { Model } from "mongoose";
-import { CreateTrackDto } from "./create-track.dto";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Track, TrackDocument } from '../schemas/track.schema';
+import mongoose, { Model } from 'mongoose';
+import { CreateTrackDto } from './create-track.dto';
 
 @Controller('tracks')
 export class TracksController {
@@ -16,9 +26,10 @@ export class TracksController {
     if (!albumId) {
       return this.trackModel.find().populate('album', 'name');
     } else {
-      return this.trackModel.find({
-        album: { _id: albumId },
-      })
+      return this.trackModel
+        .find({
+          album: { _id: albumId },
+        })
         .sort({ number: 1 })
         .populate({
           path: 'album',
@@ -28,23 +39,32 @@ export class TracksController {
             path: 'artist',
             select: 'name',
             model: 'Artist',
-          }
+          },
         });
     }
   }
 
   @Post()
-  async create(
-    @Body() trackData: CreateTrackDto) {
-    const track = new this.trackModel({
-      name: trackData.name,
-      number: trackData.number,
-      duration: trackData.duration,
-      album: trackData.album,
-      isPublished: trackData.isPublished,
-    });
+  async create(@Body() trackData: CreateTrackDto) {
+    try {
+      const track = new this.trackModel({
+        name: trackData.name,
+        number: trackData.number,
+        duration: trackData.duration,
+        album: trackData.album,
+        isPublished: trackData.isPublished,
+      });
 
-    return track.save();
+      await track.save();
+
+      return track;
+    } catch (e) {
+      if (e instanceof mongoose.Error.ValidationError) {
+        throw new UnprocessableEntityException(e);
+      }
+
+      throw e;
+    }
   }
 
   @Delete(':id')
@@ -55,5 +75,4 @@ export class TracksController {
     }
     return deletedArtist;
   }
-
 }
