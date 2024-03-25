@@ -8,6 +8,7 @@ import {
   Post,
   UnprocessableEntityException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import mongoose, { Model } from 'mongoose';
@@ -17,6 +18,8 @@ import { CreateArtistDto } from './create-artist.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
 import { diskStorage } from 'multer';
+import { TokenAuthGuard } from '../auth/token-auth.guard';
+import { RoleAuthGuard } from '../auth/role-auth.guard';
 
 @Controller('artists')
 export class ArtistsController {
@@ -40,6 +43,7 @@ export class ArtistsController {
     return artist;
   }
 
+  @UseGuards(TokenAuthGuard)
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
@@ -78,6 +82,7 @@ export class ArtistsController {
     }
   }
 
+  @UseGuards(RoleAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string) {
     const deletedArtist = await this.artistModel.findByIdAndDelete(id);

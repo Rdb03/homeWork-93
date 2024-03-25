@@ -1,13 +1,21 @@
 import {
   Body,
   Controller,
+  Delete,
+  Get,
   Post,
+  Req,
   UnprocessableEntityException,
+  UseGuards,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../schemas/user.schema';
 import mongoose, { Model } from 'mongoose';
 import { RegisterUserDto } from './register-user.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Request } from 'express';
+import { TokenAuthGuard } from '../token-auth/token-auth.guard';
+import { LogoutAuthGuard } from '../auth/logout-auth.guard';
 
 @Controller('users')
 export class UsersController {
@@ -35,5 +43,26 @@ export class UsersController {
 
       throw e;
     }
+  }
+
+  @UseGuards(AuthGuard('local'))
+  @Post('/sessions')
+  async login(@Req() req: Request) {
+    return { message: 'Correct', user: req.user };
+  }
+
+  @UseGuards(TokenAuthGuard)
+  @Get('secret')
+  async secret(@Req() req: Request) {
+    return {
+      message: 'Secret message',
+      user: req.user,
+    };
+  }
+
+  @UseGuards(LogoutAuthGuard)
+  @Delete('sessions')
+  async logout(@Req() req: Request) {
+    return { message: 'Logout!', user: req.user };
   }
 }

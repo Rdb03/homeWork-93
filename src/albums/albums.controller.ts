@@ -7,8 +7,10 @@ import {
   Param,
   Post,
   Query,
+  UnauthorizedException,
   UnprocessableEntityException,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { Album, AlbumDocument } from '../schemas/album.schema';
@@ -18,6 +20,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateAlbumDto } from './create-album.dto';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import { TokenAuthGuard } from '../auth/token-auth.guard';
+import { RoleAuthGuard } from '../auth/role-auth.guard';
 
 @Controller('albums')
 export class AlbumsController {
@@ -48,6 +52,7 @@ export class AlbumsController {
   }
 
   @Post()
+  @UseGuards(TokenAuthGuard)
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -65,6 +70,10 @@ export class AlbumsController {
     @UploadedFile() file: Express.Multer.File,
     @Body() albumData: CreateAlbumDto,
   ) {
+    if (!TokenAuthGuard) {
+      throw new UnauthorizedException('Unauthorized access');
+    }
+
     try {
       const album = new this.albumModel({
         name: albumData.name,
@@ -86,6 +95,7 @@ export class AlbumsController {
     }
   }
 
+  @UseGuards(RoleAuthGuard)
   @Delete(':id')
   async delete(@Param('id') id: string) {
     const deletedAlbum = await this.albumModel.findByIdAndDelete(id);
